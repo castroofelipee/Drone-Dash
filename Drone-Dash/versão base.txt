@@ -1,0 +1,584 @@
+import pygame
+import random
+import sys
+import time
+
+# Inicializa o Pygame
+pygame.init()
+
+# Configurações da tela
+WIDTH, HEIGHT = 350, 622
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Flappy Drone")
+
+# Cores
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Carrega imagens
+tela_inicial = pygame.image.load("img/tela_inicial.png")
+tela_inicial = pygame.transform.scale(tela_inicial, (WIDTH, HEIGHT))
+
+background = pygame.image.load("img/fundo.png")
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+drone_img = pygame.image.load("img/drone.png")
+drone_img = pygame.transform.scale(drone_img, (45, 32))
+
+building_img = pygame.image.load("img/building.png")
+building_img = pygame.transform.scale(building_img, (70, 400))
+
+bird_img = pygame.image.load("img/bird.png")
+bird_img = pygame.transform.scale(bird_img, (50, 50))
+
+# Fontes
+font = pygame.font.SysFont("Arial", 40)
+
+def reset_game():
+    global drone_x, drone_y, drone_velocity, buildings, birds, game_active, start_time
+    drone_x, drone_y = 50, HEIGHT // 2
+    drone_velocity = 0
+    buildings = []
+    birds = []
+    game_active = False
+    start_time = time.time()
+
+def add_building():
+    height = random.randint(100, 300)
+    buildings.append(pygame.Rect(WIDTH, HEIGHT - height, 70, height))
+
+def add_bird():
+    y = random.randint(50, HEIGHT - 100)
+    birds.append(pygame.Rect(WIDTH, y, 50, 50))
+
+# Variáveis iniciais
+drone_x, drone_y = 50, HEIGHT // 2
+drone_velocity = 0
+gravity = 0.5
+jump_strength = -8
+
+buildings = []
+birds = []
+building_speed = 3
+
+start_time = time.time()
+game_active = False
+
+clock = pygame.time.Clock()
+
+# Loop principal
+while True:
+    screen.fill(WHITE)
+    if not game_active:
+        screen.blit(tela_inicial, (0, 0))
+    else:
+        screen.blit(background, (0, 0))
+        current_time = time.time()
+        if current_time - start_time > 2:
+            if random.randint(1, 100) < 5:
+                add_building()
+            if random.randint(1, 100) < 3:
+                add_bird()
+        drone_velocity += gravity
+        drone_y += drone_velocity
+        for building in buildings[:]:
+            building.x -= building_speed
+            if building.x + building.width < 0:
+                buildings.remove(building)
+            screen.blit(building_img, (building.x, building.y))
+            if building.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                reset_game()
+        for bird in birds[:]:
+            bird.x -= building_speed
+            if bird.x + bird.width < 0:
+                birds.remove(bird)
+            screen.blit(bird_img, (bird.x, bird.y))
+            if bird.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                reset_game()
+        if drone_y > HEIGHT or drone_y < 0:
+            reset_game()
+        screen.blit(drone_img, (drone_x, drone_y))
+    pygame.display.flip()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            if not game_active:
+                game_active = True
+                start_time = time.time()
+            else:
+                drone_velocity = jump_strength
+    clock.tick(60)
+
+    codigo 02
+import pygame
+import random
+import sys
+
+# Inicializa o Pygame
+pygame.init()
+
+# Configurações da tela
+WIDTH, HEIGHT = 500, 622
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Drone Dash")
+
+# Cores
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Carrega imagens
+background = pygame.image.load("assets/img/fundo.png")
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+drone_img = pygame.image.load("assets/img/drone.png")
+drone_img = pygame.transform.scale(drone_img, (45, 32))
+
+building_img = pygame.image.load("assets/img/building.png")
+building_img = pygame.transform.scale(building_img, (70, 400))
+
+bird_img = pygame.image.load("assets/img/bird.png")
+bird_img = pygame.transform.scale(bird_img, (50, 50))
+
+# Carrega sons
+flap_sound = pygame.mixer.Sound("assets/audio/flap.wav")
+shoot_sound = pygame.mixer.Sound("assets/audio/shoot.wav")
+collision_sound = pygame.mixer.Sound("assets/audio/collision.wav")
+
+# Variáveis do drone
+drone_x, drone_y = 50, HEIGHT // 2
+drone_velocity = 0
+gravity = 0.5
+jump_strength = -8
+
+# Boost e Stealth
+drone_boost = False
+drone_stealth = False
+boost_timer = 0
+stealth_timer = 0
+
+# Obstáculos
+buildings = []
+birds = []
+building_gap = 150
+building_speed = 3
+
+# Tiros
+tiros = []
+
+# Contador de abates
+bird_kills = 0
+
+# Fontes
+font = pygame.font.SysFont("Arial", 20)
+
+# Função para adicionar obstáculos
+def add_building():
+    height = random.randint(100, 300)
+    buildings.append(pygame.Rect(WIDTH, HEIGHT - height, 70, height))
+
+def add_bird():
+    birds.append(pygame.Rect(random.randint(WIDTH, WIDTH + 200), random.randint(100, HEIGHT - 100), 50, 50))
+
+# Função principal
+clock = pygame.time.Clock()
+game_active = False
+delay_timer = 0
+
+# Tela inicial
+tela_inicial = pygame.image.load("assets/img/tela_inicial.png")
+tela_inicial = pygame.transform.scale(tela_inicial, (WIDTH, HEIGHT))
+
+while True:
+    screen.fill(BLACK)
+    if not game_active:
+        screen.blit(tela_inicial, (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                game_active = True
+                drone_y = HEIGHT // 2
+                drone_velocity = 0
+                buildings.clear()
+                birds.clear()
+                tiros.clear()
+                bird_kills = 0
+                delay_timer = 120  # 2 segundos
+    else:
+        screen.blit(background, (0, 0))
+        delay_timer -= 1
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    drone_velocity = jump_strength
+                    flap_sound.play()
+                if event.key == pygame.K_x:  # Atirar
+                    tiros.append(pygame.Rect(drone_x + 45, drone_y + 16, 10, 5))
+                    shoot_sound.play()
+
+        drone_velocity += gravity
+        drone_y += drone_velocity
+
+        for tiro in tiros[:]:
+            tiro.x += 8
+            if tiro.x > WIDTH:
+                tiros.remove(tiro)
+            pygame.draw.rect(screen, WHITE, tiro)
+
+        if delay_timer <= 0:
+            if random.randint(1, 100) < 5:
+                add_building()
+            if random.randint(1, 100) < 4:
+                add_bird()
+
+        for building in buildings[:]:
+            building.x -= building_speed
+            if building.x + building.width < 0:
+                buildings.remove(building)
+            if building.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                collision_sound.play()
+                game_active = False
+            screen.blit(building_img, (building.x, building.y))
+
+        for bird in birds[:]:
+            bird.x -= building_speed
+            if bird.x + bird.width < 0:
+                birds.remove(bird)
+            if pygame.Rect(drone_x, drone_y, 45, 32).colliderect(bird):
+                collision_sound.play()
+                game_active = False
+            for tiro in tiros[:]:
+                if bird.colliderect(tiro):
+                    birds.remove(bird)
+                    tiros.remove(tiro)
+                    bird_kills += 1
+            screen.blit(bird_img, (bird.x, bird.y))
+
+        if drone_y > HEIGHT or drone_y < 0:
+            game_active = False
+
+        screen.blit(drone_img, (drone_x, drone_y))
+
+        kill_text = font.render(f"Birds Killed: {bird_kills}", True, WHITE)
+        screen.blit(kill_text, (10, 10))
+
+    pygame.display.flip()
+    clock.tick(60)
+
+
+CODIGO 03
+import pygame
+import random
+import sys
+
+# Inicializa o Pygame
+pygame.init()
+
+# Configurações da tela
+WIDTH, HEIGHT = 550, 630
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Drone Dash")
+
+# Cores
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Carrega imagens
+background = pygame.image.load("assets/img/fundo.png")
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+tela_inicial = pygame.image.load("assets/img/tela_inicial.png")
+tela_inicial = pygame.transform.scale(tela_inicial, (WIDTH, HEIGHT))
+
+drone_img = pygame.image.load("assets/img/drone.png")
+drone_img = pygame.transform.scale(drone_img, (45, 32))
+
+building_img = pygame.image.load("assets/img/building.png")
+building_img = pygame.transform.scale(building_img, (70, 400))
+
+bird_img = pygame.image.load("assets/img/bird.png")
+bird_img = pygame.transform.scale(bird_img, (50, 50))
+
+# Carrega sons
+flap_sound = pygame.mixer.Sound("assets/audio/flap.wav")
+shoot_sound = pygame.mixer.Sound("assets/audio/shoot.wav")
+collision_sound = pygame.mixer.Sound("assets/audio/collision.wav")
+
+# Variáveis do drone
+drone_x, drone_y = 50, HEIGHT // 2
+drone_velocity = 0
+gravity = 0.5
+jump_strength = -8
+
+# Obstáculos
+buildings = []
+building_gap = 150
+building_speed = 3
+
+# Pássaros
+birds = []
+bird_speed = 3
+
+# Tiros
+tiros = []
+tiro_speed = 7
+
+# Contador de pássaros abatidos
+bird_count = 0
+
+# Dificuldade progressiva
+time_elapsed = 0
+
+def add_building():
+    height = random.randint(100, 300)
+    buildings.append(pygame.Rect(WIDTH, HEIGHT - height, 70, height))
+
+def add_bird():
+    birds.append(pygame.Rect(random.randint(WIDTH, WIDTH + 300), random.randint(50, HEIGHT - 100), 50, 50))
+
+def restart_game():
+    global drone_y, drone_velocity, buildings, birds, tiros, bird_count, time_elapsed
+    drone_y = HEIGHT // 2
+    drone_velocity = 0
+    buildings.clear()
+    birds.clear()
+    tiros.clear()
+    bird_count = 0
+    time_elapsed = 0
+    main()
+
+def main():
+    global drone_y, drone_velocity, time_elapsed, bird_count
+    clock = pygame.time.Clock()
+    game_started = False
+    running = True
+    
+    while running:
+        screen.blit(tela_inicial if not game_started else background, (0, 0))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    drone_velocity = jump_strength
+                    flap_sound.play()
+                    game_started = True
+                if event.key == pygame.K_x and game_started:
+                    tiros.append(pygame.Rect(drone_x + 45, drone_y + 16, 10, 5))
+                    shoot_sound.play()
+
+        if game_started:
+            drone_velocity += gravity
+            drone_y += drone_velocity
+            time_elapsed += 1
+
+            if time_elapsed % 120 == 0:  # A cada 2 segundos
+                add_building()
+                add_bird()
+
+            for building in buildings[:]:
+                building.x -= building_speed
+                if building.x + building.width < 0:
+                    buildings.remove(building)
+                if building.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                    collision_sound.play()
+                    restart_game()
+                screen.blit(building_img, (building.x, building.y))
+
+            for bird in birds[:]:
+                bird.x -= bird_speed
+                if bird.x + bird.width < 0:
+                    birds.remove(bird)
+                if bird.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                    collision_sound.play()
+                    restart_game()
+                screen.blit(bird_img, (bird.x, bird.y))
+
+            for tiro in tiros[:]:
+                tiro.x += tiro_speed
+                if tiro.x > WIDTH:
+                    tiros.remove(tiro)
+                for bird in birds[:]:
+                    if tiro.colliderect(bird):
+                        birds.remove(bird)
+                        tiros.remove(tiro)
+                        bird_count += 1
+                        break
+                pygame.draw.rect(screen, WHITE, tiro)
+
+            if drone_y > HEIGHT or drone_y < 0:
+                collision_sound.play()
+                restart_game()
+
+            screen.blit(drone_img, (drone_x, drone_y))
+            score_text = pygame.font.SysFont("Arial", 30).render(f"Pássaros: {bird_count}", True, WHITE)
+            screen.blit(score_text, (10, 10))
+        
+        pygame.display.flip()
+        clock.tick(60)
+
+main()
+
+
+Pode ser o código 03, não me lembro
+import pygame
+import random
+import sys
+
+# Inicializa o Pygame
+pygame.init()
+
+# Configurações da tela
+WIDTH, HEIGHT = 550, 630 
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Drone Dash")
+
+# Cores
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Carrega imagens
+background = pygame.image.load("assets/img/fundo.png")
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+tela_inicial = pygame.image.load("assets/img/tela_inicial.png")
+tela_inicial = pygame.transform.scale(tela_inicial, (WIDTH, HEIGHT))
+
+drone_img = pygame.image.load("assets/img/drone.png")
+drone_img = pygame.transform.scale(drone_img, (45, 32))
+
+building_img = pygame.image.load("assets/img/building.png")
+building_img = pygame.transform.scale(building_img, (70, 400))
+
+bird_img = pygame.image.load("assets/img/bird.png")
+bird_img = pygame.transform.scale(bird_img, (50, 50))
+
+# Carrega sons
+flap_sound = pygame.mixer.Sound("assets/audio/flap.wav")
+shoot_sound = pygame.mixer.Sound("assets/audio/shoot.wav")
+collision_sound = pygame.mixer.Sound("assets/audio/collision.wav")
+
+# Variáveis do drone
+drone_x, drone_y = 50, HEIGHT // 2
+drone_velocity = 0
+gravity = 0.5
+jump_strength = -8
+
+# Obstáculos
+buildings = []
+building_gap = 150
+building_speed = 3
+
+# Pássaros
+birds = []
+bird_speed = 3
+
+# Tiros
+tiros = []
+tiro_speed = 7
+
+# Contador de pássaros abatidos
+bird_count = 0
+
+# Dificuldade progressiva
+time_elapsed = 0
+
+def add_building():
+    height = random.randint(100, 300)
+    buildings.append(pygame.Rect(WIDTH, HEIGHT - height, 70, height))
+
+def add_bird():
+    birds.append(pygame.Rect(random.randint(WIDTH, WIDTH + 300), random.randint(50, HEIGHT - 100), 50, 50))
+
+def restart_game():
+    global drone_y, drone_velocity, buildings, birds, tiros, bird_count, time_elapsed
+    drone_y = HEIGHT // 2
+    drone_velocity = 0
+    buildings.clear()
+    birds.clear()
+    tiros.clear()
+    bird_count = 0
+    time_elapsed = 0
+    main()
+
+def main():
+    global drone_y, drone_velocity, time_elapsed, bird_count
+    clock = pygame.time.Clock()
+    game_started = False
+    running = True
+    
+    while running:
+        screen.blit(tela_inicial if not game_started else background, (0, 0))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    drone_velocity = jump_strength
+                    flap_sound.play()
+                    game_started = True
+                if event.key == pygame.K_x and game_started:
+                    tiros.append(pygame.Rect(drone_x + 45, drone_y + 16, 10, 5))
+                    shoot_sound.play()
+
+        if game_started:
+            drone_velocity += gravity
+            drone_y += drone_velocity
+            time_elapsed += 1
+
+            if time_elapsed % 120 == 0:  # A cada 2 segundos
+                add_building()
+                add_bird()
+
+            for building in buildings[:]:
+                building.x -= building_speed
+                if building.x + building.width < 0:
+                    buildings.remove(building)
+                if building.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                    collision_sound.play()
+                    restart_game()
+                screen.blit(building_img, (building.x, building.y))
+
+            for bird in birds[:]:
+                bird.x -= bird_speed
+                if bird.x + bird.width < 0:
+                    birds.remove(bird)
+                if bird.colliderect(pygame.Rect(drone_x, drone_y, 45, 32)):
+                    collision_sound.play()
+                    restart_game()
+                screen.blit(bird_img, (bird.x, bird.y))
+
+            for tiro in tiros[:]:
+                tiro.x += tiro_speed
+                if tiro.x > WIDTH:
+                    tiros.remove(tiro)
+                for bird in birds[:]:
+                    if tiro.colliderect(bird):
+                        birds.remove(bird)
+                        tiros.remove(tiro)
+                        bird_count += 1
+                        break
+                pygame.draw.rect(screen, WHITE, tiro)
+
+            if drone_y > HEIGHT or drone_y < 0:
+                collision_sound.play()
+                restart_game()
+
+            screen.blit(drone_img, (drone_x, drone_y))
+            score_text = pygame.font.SysFont("Arial", 30).render(f"Pássaros: {bird_count}", True, WHITE)
+            screen.blit(score_text, (10, 10))
+        
+        pygame.display.flip()
+        clock.tick(60)
+
+main()
